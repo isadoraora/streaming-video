@@ -8,6 +8,7 @@ public interface CategoryService {
   Mono<CategoryDTO> insert(Mono<CategoryDTO> categoryDTOMono);
 
   Flux<CategoryDTO> getAllCategories();
+  Mono<CategoryDTO> getCategoryById(String id);
 
 }
 

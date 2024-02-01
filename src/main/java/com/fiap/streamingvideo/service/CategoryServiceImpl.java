@@ -1,5 +1,6 @@
 package com.fiap.streamingvideo.service;
 
+import com.fiap.streamingvideo.exception.NotFoundException;
 import com.fiap.streamingvideo.mapper.CategoryMapper;
 import com.fiap.streamingvideo.model.CategoryDTO;
 import com.fiap.streamingvideo.repository.CategoryRepository;
@@ -25,6 +26,13 @@ public class CategoryServiceImpl implements CategoryService {
   @Override
   public Flux<CategoryDTO> getAllCategories() {
     return categoryRepository.findAll()
+        .map(CategoryMapper::fromEntity);
+  }
+
+  @Override
+  public Mono<CategoryDTO> getCategoryById(String id) {
+    return categoryRepository.findById(id)
+        .switchIfEmpty(Mono.error(new NotFoundException("Category not found with id: " + id)))
         .map(CategoryMapper::fromEntity);
   }
 

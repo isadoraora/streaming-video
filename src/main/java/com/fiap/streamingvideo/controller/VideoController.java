@@ -1,8 +1,11 @@
 package com.fiap.streamingvideo.controller;
 
 import com.fiap.streamingvideo.model.VideoDTO;
+import com.fiap.streamingvideo.model.VideoStatisticsDTO;
 import com.fiap.streamingvideo.service.VideoService;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,5 +60,34 @@ public class VideoController {
     return videoService.updateVideo(id, videoDTOMono)
         .map(ResponseEntity::ok)
         .defaultIfEmpty(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/search/by-title")
+  public Mono<ResponseEntity<VideoDTO>> getVideoByTitle(@RequestParam String title) {
+    return videoService.getVideoByTitle(title)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/search/by-publish-date")
+  public Mono<ResponseEntity<VideoDTO>> getVideoByPublishDate(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                              LocalDateTime publishDate) {
+    return videoService.getVideoByPublishDate(publishDate)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/search")
+  public Mono<ResponseEntity<VideoDTO>> getVideoByTitleAndPublishDate(
+      @RequestParam String title,
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime publishDate) {
+    return videoService.getVideoByTitleAndPublishDate(title, publishDate)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
+  }
+
+  @GetMapping("/statistics")
+  public Mono<VideoStatisticsDTO> getVideoStatistics() {
+    return videoService.getVideoStatistics();
   }
 }
