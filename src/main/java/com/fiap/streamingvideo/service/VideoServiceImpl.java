@@ -1,21 +1,20 @@
 package com.fiap.streamingvideo.service;
 
+import com.fiap.streamingvideo.entity.VideoStatistics;
 import com.fiap.streamingvideo.exception.NotFoundException;
 import com.fiap.streamingvideo.mapper.VideoMapper;
 import com.fiap.streamingvideo.model.VideoDTO;
-import com.fiap.streamingvideo.model.VideoStatisticsDTO;
 import com.fiap.streamingvideo.repository.VideoRepository;
 import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class VideoServiceImpl implements VideoService {
 
   private final VideoRepository videoRepository;
@@ -50,8 +49,9 @@ public class VideoServiceImpl implements VideoService {
 
   @Override
   public Flux<VideoDTO> getAllVideos(int page, int size) {
-    Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishDate"));
-    return videoRepository.findAllByOrderByPublishDateDesc(pageable)
+    return videoRepository.findAll()
+        .skip((long) page * size)
+        .take(size)
         .map(videoMapper::fromEntity);
   }
 
@@ -72,33 +72,40 @@ public class VideoServiceImpl implements VideoService {
         .switchIfEmpty(Mono.error(new NotFoundException("Video not found with id: " + id)));
   }
 
-  @Override
-  public Mono<VideoStatisticsDTO> getVideoStatistics() {
+  public Mono<VideoStatistics> getVideoStatistics() {
     return videoRepository.calculateVideoStatistics()
-        .map(statistics -> new VideoStatisticsDTO(
-            statistics.getTotalVideos(),
-            statistics.getTotalFavorited(),
-            statistics.getAverageViews()));
+        .doOnNext(stats -> log.info("Estatísticas recebidas: totalVideos={}, totalFavorited={}, avgViews={}", stats.getTotalVideos(),
+            stats.getTotalFavorited(), stats.getAverageViews()));
   }
 
   @Override
-  public Mono<VideoDTO> getVideoByTitle(String title) {
+  public Flux<VideoDTO> getVideosByTitle(String title) {
     return videoRepository.findByTitle(title)
-        .switchIfEmpty(Mono.error(new NotFoundException("Video not found with this title.")))
+        .switchIfEmpty(Mono.error(new NotFoundException("Video not found with title: " + title)))
         .map(videoMapper::fromEntity);
   }
 
   @Override
-  public Mono<VideoDTO> getVideoByPublishDate(LocalDateTime publishDate) {
+  public Flux<VideoDTO> getVideoByPublishDate(LocalDateTime publishDate) {
     return videoRepository.findByPublishDate(publishDate)
         .switchIfEmpty(Mono.error(new NotFoundException("Video not found with this date.")))
         .map(videoMapper::fromEntity);
   }
 
   @Override
-  public Mono<VideoDTO> getVideoByTitleAndPublishDate(String title, LocalDateTime publishDate) {
+  public Flux<VideoDTO> getVideoByTitleAndPublishDate(String title, LocalDateTime publishDate) {
     return videoRepository.findByTitleAndPublishDate(title, publishDate)
         .switchIfEmpty(Mono.error(new NotFoundException("Video not found with this title and date.")))
+        .map(videoMapper::fromEntity);
+  }
+
+  @Override
+  public Mono<VideoDTO> viewVideo(String videoId) {
+    return videoRepository.findById(videoId)
+        .flatMap(video -> {
+          video.setViews(video.getViews() + 1);
+          return videoRepository.save(video);
+        })
         .map(videoMapper::fromEntity);
   }
 }

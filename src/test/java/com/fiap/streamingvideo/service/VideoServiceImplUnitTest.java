@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -153,25 +154,25 @@ class VideoServiceImplUnitTest {
 
   @Test
   void getVideoStatisticsSuccessfully() {
-    VideoStatistics statistics = new VideoStatistics(10L, 5L, 2.5);
+    VideoStatistics statistics = new VideoStatistics(10, 5, 2.5);
     given(videoRepository.calculateVideoStatistics()).willReturn(Mono.just(statistics));
 
     StepVerifier.create(videoService.getVideoStatistics())
         .assertNext(videoStatisticsDTO -> {
           assertNotNull(videoStatisticsDTO);
-          assertEquals(10L, videoStatisticsDTO.totalVideos());
-          assertEquals(5L, videoStatisticsDTO.totalFavorited());
-          assertEquals(2.5, videoStatisticsDTO.averageViews());
+          assertEquals(10, videoStatisticsDTO.getTotalVideos());
+          assertEquals(5, videoStatisticsDTO.getTotalFavorited());
+          assertEquals(2.5, videoStatisticsDTO.getAverageViews());
         })
         .verifyComplete();
   }
 
   @Test
   void getVideoByTitleSuccessfully() {
-    given(videoRepository.findByTitle(videoDTO.title())).willReturn(Mono.just(video));
+    given(videoRepository.findByTitle(videoDTO.title())).willReturn(Flux.just(video));
     given(videoMapper.fromEntity(video)).willReturn(videoDTO);
 
-    StepVerifier.create(videoService.getVideoByTitle(videoDTO.title()))
+    StepVerifier.create(videoService.getVideosByTitle(videoDTO.title()))
         .assertNext(foundVideoDTO -> {
           assertNotNull(foundVideoDTO);
           assertEquals(videoDTO.title(), foundVideoDTO.title());
@@ -181,16 +182,16 @@ class VideoServiceImplUnitTest {
 
   @Test
   void getVideoByTitleNotFound() {
-    given(videoRepository.findByTitle("Nonexistent Title")).willReturn(Mono.empty());
+    given(videoRepository.findByTitle("Nonexistent Title")).willReturn(Flux.empty());
 
-    StepVerifier.create(videoService.getVideoByTitle("Nonexistent Title"))
+    StepVerifier.create(videoService.getVideosByTitle("Nonexistent Title"))
         .expectError(NotFoundException.class)
         .verify();
   }
 
   @Test
   void getVideoByPublishDateSuccessfully() {
-    given(videoRepository.findByPublishDate(videoDTO.publishDate())).willReturn(Mono.just(video));
+    given(videoRepository.findByPublishDate(videoDTO.publishDate())).willReturn(Flux.just(video));
     given(videoMapper.fromEntity(video)).willReturn(videoDTO);
 
     StepVerifier.create(videoService.getVideoByPublishDate(videoDTO.publishDate()))
@@ -204,7 +205,7 @@ class VideoServiceImplUnitTest {
   @Test
   void getVideoByTitleAndPublishDateSuccessfully() {
     given(videoRepository.findByTitleAndPublishDate(videoDTO.title(), videoDTO.publishDate()))
-        .willReturn(Mono.just(video));
+        .willReturn(Flux.just(video));
     given(videoMapper.fromEntity(video)).willReturn(videoDTO);
 
     StepVerifier.create(videoService.getVideoByTitleAndPublishDate(videoDTO.title(), videoDTO.publishDate()))

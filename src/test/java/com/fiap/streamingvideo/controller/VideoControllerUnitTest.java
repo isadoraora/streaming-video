@@ -1,11 +1,13 @@
 package com.fiap.streamingvideo.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.fiap.streamingvideo.entity.VideoStatistics;
 import com.fiap.streamingvideo.model.VideoDTO;
-import com.fiap.streamingvideo.model.VideoStatisticsDTO;
 import com.fiap.streamingvideo.service.VideoService;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -113,7 +115,7 @@ class VideoControllerUnitTest {
   void getVideoByTitleTest() {
     String title = videoDTO.title();
 
-    when(videoService.getVideoByTitle(title)).thenReturn(Mono.just(videoDTO));
+    when(videoService.getVideosByTitle(title)).thenReturn(Flux.just(videoDTO));
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder
@@ -122,15 +124,15 @@ class VideoControllerUnitTest {
             .build())
         .exchange()
         .expectStatus().isOk()
-        .expectBody(VideoDTO.class)
-        .isEqualTo(videoDTO);
+        .expectBodyList(VideoDTO.class)
+        .contains(videoDTO);
   }
 
   @Test
   void getVideoByPublishDateTest() {
     LocalDateTime publishDate = videoDTO.publishDate();
 
-    when(videoService.getVideoByPublishDate(publishDate)).thenReturn(Mono.just(videoDTO));
+    when(videoService.getVideoByPublishDate(publishDate)).thenReturn(Flux.just(videoDTO));
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder
@@ -139,8 +141,8 @@ class VideoControllerUnitTest {
             .build())
         .exchange()
         .expectStatus().isOk()
-        .expectBody(VideoDTO.class)
-        .isEqualTo(videoDTO);
+        .expectBodyList(VideoDTO.class)
+        .contains(videoDTO);
   }
 
   @Test
@@ -148,7 +150,7 @@ class VideoControllerUnitTest {
     String title = videoDTO.title();
     LocalDateTime publishDate = videoDTO.publishDate();
 
-    when(videoService.getVideoByTitleAndPublishDate(title, publishDate)).thenReturn(Mono.just(videoDTO));
+    when(videoService.getVideoByTitleAndPublishDate(title, publishDate)).thenReturn(Flux.just(videoDTO));
 
     webTestClient.get()
         .uri(uriBuilder -> uriBuilder
@@ -158,21 +160,28 @@ class VideoControllerUnitTest {
             .build())
         .exchange()
         .expectStatus().isOk()
-        .expectBody(VideoDTO.class)
-        .isEqualTo(videoDTO);
+        .expectBodyList(VideoDTO.class)
+        .contains(videoDTO);
   }
+
 
   @Test
   void getVideoStatisticsTest() {
-    VideoStatisticsDTO videoStatisticsDTO = new VideoStatisticsDTO(10, 5, 100.0);
-    when(videoService.getVideoStatistics()).thenReturn(Mono.just(videoStatisticsDTO));
+    VideoStatistics videoStatistics = new VideoStatistics(10, 5, 100.0);
+    when(videoService.getVideoStatistics()).thenReturn(Mono.just(videoStatistics));
 
     webTestClient.get()
-        .uri("/videos/statistics")
+        .uri("/videos/all/statistics")
         .exchange()
         .expectStatus().isOk()
-        .expectBody(VideoStatisticsDTO.class)
-        .isEqualTo(videoStatisticsDTO);
+        .expectBody(VideoStatistics.class)
+        .consumeWith(response -> {
+          VideoStatistics responseStats = response.getResponseBody();
+          assertNotNull(responseStats);
+          assertEquals(10, responseStats.getTotalVideos());
+          assertEquals(5, responseStats.getTotalFavorited());
+          assertEquals(100.0, responseStats.getAverageViews());
+        });
   }
 
 }

@@ -1,7 +1,7 @@
 package com.fiap.streamingvideo.controller;
 
+import com.fiap.streamingvideo.entity.VideoStatistics;
 import com.fiap.streamingvideo.model.VideoDTO;
-import com.fiap.streamingvideo.model.VideoStatisticsDTO;
 import com.fiap.streamingvideo.service.VideoService;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -63,31 +63,42 @@ public class VideoController {
   }
 
   @GetMapping("/search/by-title")
-  public Mono<ResponseEntity<VideoDTO>> getVideoByTitle(@RequestParam String title) {
-    return videoService.getVideoByTitle(title)
-        .map(ResponseEntity::ok)
-        .defaultIfEmpty(ResponseEntity.notFound().build());
+  public Mono<ResponseEntity<Flux<VideoDTO>>> getVideosByTitle(@RequestParam String title) {
+    Flux<VideoDTO> videoFlux = videoService.getVideosByTitle(title);
+    return videoFlux.hasElements()
+        .map(hasElements -> hasElements ? ResponseEntity.ok(videoFlux) : ResponseEntity.notFound().build());
   }
 
   @GetMapping("/search/by-publish-date")
-  public Mono<ResponseEntity<VideoDTO>> getVideoByPublishDate(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                                                              LocalDateTime publishDate) {
-    return videoService.getVideoByPublishDate(publishDate)
-        .map(ResponseEntity::ok)
-        .defaultIfEmpty(ResponseEntity.notFound().build());
+  public Mono<ResponseEntity<Flux<VideoDTO>>> getVideoByPublishDate(
+      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime publishDate) {
+    Flux<VideoDTO> videoDTOFlux = videoService.getVideoByPublishDate(publishDate);
+    return videoDTOFlux.hasElements()
+        .map(hasElements -> hasElements
+            ? ResponseEntity.ok(videoDTOFlux)
+            : ResponseEntity.notFound().build());
   }
 
   @GetMapping("/search")
-  public Mono<ResponseEntity<VideoDTO>> getVideoByTitleAndPublishDate(
+  public Mono<ResponseEntity<Flux<VideoDTO>>> getVideoByTitleAndPublishDate(
       @RequestParam String title,
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime publishDate) {
-    return videoService.getVideoByTitleAndPublishDate(title, publishDate)
-        .map(ResponseEntity::ok)
-        .defaultIfEmpty(ResponseEntity.notFound().build());
+    Flux<VideoDTO> videoDTOFlux = videoService.getVideoByTitleAndPublishDate(title, publishDate);
+    return videoDTOFlux.hasElements()
+        .map(hasElements -> hasElements
+            ? ResponseEntity.ok(videoDTOFlux)
+            : ResponseEntity.notFound().build());
   }
 
-  @GetMapping("/statistics")
-  public Mono<VideoStatisticsDTO> getVideoStatistics() {
+  @GetMapping("/all/statistics")
+  public Mono<VideoStatistics> getVideoStatistics() {
     return videoService.getVideoStatistics();
+  }
+
+  @GetMapping("/{videoId}/view")
+  public Mono<ResponseEntity<VideoDTO>> viewVideo(@PathVariable String videoId) {
+    return videoService.viewVideo(videoId)
+        .map(ResponseEntity::ok)
+        .defaultIfEmpty(ResponseEntity.notFound().build());
   }
 }

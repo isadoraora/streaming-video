@@ -12,11 +12,15 @@ public class User {
   @Id
   private String userId;
 
-  private String videoId;
+  private String name;
+  private String cpf;
+  private String email;
 
-  public User(String userId, String videoId) {
-    this.userId = userId;
-    this.videoId = videoId;
+  public User(String id, String name, String cpf, String email) {
+    this.userId = id;
+    this.name = name;
+    this.cpf = cpf;
+    this.email = email;
   }
 
   public User() {

@@ -25,20 +25,16 @@ public class Video {
   private LocalDateTime publishDate;
   private List<String> categories;
   private Boolean isFavorite;
-  private Long views;
+  private Long views = 0L;
 
-  public Video(String id, String title, String description, String url,
+  public Video(String title, String description, String url,
                LocalDateTime publishDate, List<String> categories,
-               Boolean isFavorite) {
-    this.id = id;
+               boolean isFavorite) {
     this.title = title;
     this.description = description;
     this.url = url;
     this.publishDate = publishDate;
     this.categories = categories;
     this.isFavorite = isFavorite;
-    this.views = 0L;
   }
 }
-
-

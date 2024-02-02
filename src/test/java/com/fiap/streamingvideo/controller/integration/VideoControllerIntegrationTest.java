@@ -39,6 +39,5 @@ public class VideoControllerIntegrationTest {
           assertNotNull(createdVideo.id());
           assertEquals("New Title", createdVideo.title());
         });
-
   }
 }

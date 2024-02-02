@@ -1,7 +1,7 @@
 package com.fiap.streamingvideo.service;
 
+import com.fiap.streamingvideo.entity.VideoStatistics;
 import com.fiap.streamingvideo.model.VideoDTO;
-import com.fiap.streamingvideo.model.VideoStatisticsDTO;
 import java.time.LocalDateTime;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,13 +17,14 @@ public interface VideoService {
 
   Mono<VideoDTO> updateVideo(String id, Mono<VideoDTO> videoDTOMono);
 
-  Mono<VideoStatisticsDTO> getVideoStatistics();
+  Mono<VideoStatistics> getVideoStatistics();
 
-  Mono<VideoDTO> getVideoByTitle(String title);
+  Flux<VideoDTO> getVideosByTitle(String title);
 
-  Mono<VideoDTO> getVideoByPublishDate(LocalDateTime publishDate);
+  Flux<VideoDTO> getVideoByPublishDate(LocalDateTime publishDate);
 
-  Mono<VideoDTO> getVideoByTitleAndPublishDate(String title, LocalDateTime publishDate);
+  Flux<VideoDTO> getVideoByTitleAndPublishDate(String title, LocalDateTime publishDate);
 
+  Mono<VideoDTO> viewVideo(String videoId);
 
 }
